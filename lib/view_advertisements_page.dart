@@ -11,6 +11,7 @@ class ViewAdvertisementsPage extends StatefulWidget {
 class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
   List<dynamic> _advertisements = [];
   List<dynamic> _filteredAdvertisements = [];
+  Set<dynamic> _favoriteAdvertisements = {}; // Store favorites
   TextEditingController _searchController = TextEditingController();
 
   Future<void> _fetchAdvertisements() async {
@@ -39,6 +40,44 @@ class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
     setState(() {
       _filteredAdvertisements = filtered;
     });
+  }
+
+  void _toggleFavorite(dynamic ad) {
+    setState(() {
+      if (_favoriteAdvertisements.contains(ad)) {
+        _favoriteAdvertisements.remove(ad);
+      } else {
+        _favoriteAdvertisements.add(ad);
+      }
+    });
+  }
+
+  void _showFavorites(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return _favoriteAdvertisements.isEmpty
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'No favorites added!',
+                    style: TextStyle(fontSize: 18, color: Colors.black54),
+                  ),
+                ),
+              )
+            : ListView(
+                padding: const EdgeInsets.all(8.0),
+                children: _favoriteAdvertisements.map((ad) {
+                  return ListTile(
+                    title: Text(ad['title'] ?? 'No Title'),
+                    subtitle: Text(ad['location'] ?? 'No Location'),
+                    trailing: Text('₹${ad['rent'] ?? 'N/A'}'),
+                  );
+                }).toList(),
+              );
+      },
+    );
   }
 
   @override
@@ -93,6 +132,7 @@ class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
               itemCount: _filteredAdvertisements.length,
               itemBuilder: (context, index) {
                 final ad = _filteredAdvertisements[index];
+                final isFavorite = _favoriteAdvertisements.contains(ad);
                 return Card(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
@@ -165,10 +205,18 @@ class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
                       Positioned(
                         top: 8,
                         right: 8,
-                        child: CircleAvatar(
-                          backgroundColor: Colors.white,
-                          child: Icon(Icons.favorite_border,
-                              size: 20, color: Colors.red),
+                        child: GestureDetector(
+                          onTap: () => _toggleFavorite(ad),
+                          child: CircleAvatar(
+                            backgroundColor: Colors.white,
+                            child: Icon(
+                              isFavorite
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              size: 20,
+                              color: Colors.red,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -178,6 +226,11 @@ class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showFavorites(context),
+        backgroundColor: Colors.blueAccent,
+        child: Icon(Icons.favorite, color: Colors.white),
       ),
     );
   }
