@@ -4,7 +4,8 @@ import 'dart:convert';
 
 class ViewAdvertisementsPage extends StatefulWidget {
   @override
-  _ViewAdvertisementsPageState createState() => _ViewAdvertisementsPageState();
+  _ViewAdvertisementsPageState createState() =>
+      _ViewAdvertisementsPageState();
 }
 
 class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
@@ -12,7 +13,6 @@ class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
   List<dynamic> _filteredAdvertisements = [];
   TextEditingController _searchController = TextEditingController();
 
-  // Fetch advertisements from the API
   Future<void> _fetchAdvertisements() async {
     final String apiUrl = "http://127.0.0.1:8000/api/data/";
 
@@ -21,7 +21,7 @@ class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
     if (response.statusCode == 200) {
       setState(() {
         _advertisements = json.decode(response.body);
-        _filteredAdvertisements = _advertisements; // Initially show all advertisements
+        _filteredAdvertisements = _advertisements;
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -30,7 +30,6 @@ class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
     }
   }
 
-  // Filter advertisements based on the location entered in the search bar
   void _filterAdvertisements(String query) {
     final filtered = _advertisements.where((ad) {
       final location = ad['location'] ?? '';
@@ -47,7 +46,6 @@ class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
     super.initState();
     _fetchAdvertisements();
 
-    // Listen for changes in the search bar and update the filtered results
     _searchController.addListener(() {
       _filterAdvertisements(_searchController.text);
     });
@@ -69,129 +67,111 @@ class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(8.0),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                labelText: 'Search by location',
+                hintText: 'Search by location',
                 prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 filled: true,
                 fillColor: Colors.grey[200],
               ),
             ),
           ),
           Expanded(
-            child: ListView.builder(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(8.0),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+                childAspectRatio: 0.8,
+              ),
               itemCount: _filteredAdvertisements.length,
               itemBuilder: (context, index) {
                 final ad = _filteredAdvertisements[index];
                 return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
                   ),
-                  elevation: 5,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                      ad['photo'] != null && ad['photo'].isNotEmpty
-    ? ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: Image.network(
-          // Check if the photo URL already has the base URL
-          ad['photo'].startsWith('http')
-              ? ad['photo'] // Use the full URL if it starts with 'http'
-              : 'http://127.0.0.1:8000/${ad["photo"]}', // Otherwise, prepend the base URL
-          height: 180,
-          width: double.infinity,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              height: 180,
-              color: Colors.grey[300],
-              child: Icon(Icons.broken_image, size: 50),
-            );
-          },
-        ),
-      )
-    : Container(
-        height: 180,
-        color: Colors.grey[300],
-        child: Icon(Icons.image_not_supported, size: 50),
-      ),
-
-                        const SizedBox(height: 12),
-                        Text(
-                          ad['title'] ?? 'No Title',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                  elevation: 4,
+                  child: Stack(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(15),
+                            ),
+                            child: Image.network(
+                              ad['photo'] ?? '',
+                              height: 120,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  height: 120,
+                                  color: Colors.grey[300],
+                                  child: Icon(Icons.broken_image, size: 50),
+                                );
+                              },
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          ad['description'] ?? 'No Description',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.black54,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Icon(Icons.home, size: 18, color: Colors.blueAccent),
-                            const SizedBox(width: 5),
-                            Text(
-                              ad['BHK'] ?? 'N/A',
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              ad['title'] ?? 'No Title',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            Spacer(),
-                            Icon(Icons.location_on, size: 18, color: Colors.redAccent),
-                            const SizedBox(width: 5),
-                            Text(
-                              ad['location'] ?? 'N/A',
-                              style: TextStyle(fontSize: 16, color: Colors.black54),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Icon(Icons.copy, size: 18, color: Colors.green),
-                            const SizedBox(width: 5),
-                            Text(
-                              ad['city'] ?? 'N/A',
-                              style: TextStyle(fontSize: 16, color: Colors.black54),
-                            ),
-                            Spacer(),
-                            Icon(Icons.monetization_on, size: 18, color: Colors.orange),
-                            const SizedBox(width: 5),
-                            Text(
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Text(
                               '₹${ad['rent'] ?? 'N/A'}',
-                              style: TextStyle(fontSize: 16, color: Colors.black54),
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.black87,
+                              ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Icon(Icons.phone, size: 18, color: Colors.blue),
-                            const SizedBox(width: 5),
-                            Text(
-                              ad['contact'] ?? 'N/A',
-                              style: TextStyle(fontSize: 16, color: Colors.black54),
+                          ),
+                          Spacer(),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Row(
+                              children: [
+                                Icon(Icons.location_on,
+                                    size: 14, color: Colors.red),
+                                SizedBox(width: 4),
+                                Text(
+                                  ad['location'] ?? 'N/A',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: CircleAvatar(
+                          backgroundColor: Colors.white,
+                          child: Icon(Icons.favorite_border,
+                              size: 20, color: Colors.red),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 );
               },
