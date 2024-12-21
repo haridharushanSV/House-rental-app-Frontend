@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:url_launcher/url_launcher.dart';
+import 'full_view_advertisement.dart'; // Import the detailed view
 
 class ViewAdvertisementsPage extends StatefulWidget {
   @override
@@ -70,9 +72,32 @@ class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
                 padding: const EdgeInsets.all(8.0),
                 children: _favoriteAdvertisements.map((ad) {
                   return ListTile(
+                    leading: Image.network(
+                      ad['photo'] ?? '',
+                      width: 50,
+                      height: 50,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 50,
+                          height: 50,
+                          color: Colors.grey[300],
+                          child: Icon(Icons.broken_image, size: 30),
+                        );
+                      },
+                    ),
                     title: Text(ad['title'] ?? 'No Title'),
                     subtitle: Text(ad['location'] ?? 'No Location'),
-                    trailing: Text('₹${ad['rent'] ?? 'N/A'}'),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        setState(() {
+                          _favoriteAdvertisements.remove(ad);
+                        });
+                        Navigator.pop(context); // Close and reopen modal
+                        _showFavorites(context);
+                      },
+                    ),
                   );
                 }).toList(),
               );
@@ -133,93 +158,108 @@ class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
               itemBuilder: (context, index) {
                 final ad = _filteredAdvertisements[index];
                 final isFavorite = _favoriteAdvertisements.contains(ad);
-                return Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
+                return GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DetailPage(ad: ad),
+                    ),
                   ),
-                  elevation: 4,
-                  child: Stack(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(15),
-                            ),
-                            child: Image.network(
-                              ad['photo'] ?? '',
-                              height: 120,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  height: 120,
-                                  color: Colors.grey[300],
-                                  child: Icon(Icons.broken_image, size: 50),
-                                );
-                              },
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              ad['title'] ?? 'No Title',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    elevation: 4,
+                    child: Stack(
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(15),
+                              ),
+                              child: Image.network(
+                                ad['photo'] ?? '',
+                                height: 140,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    height: 140,
+                                    color: Colors.grey[300],
+                                    child: Icon(Icons.broken_image, size: 50),
+                                  );
+                                },
                               ),
                             ),
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 8.0),
-                            child: Text(
-                              '₹${ad['rent'] ?? 'N/A'}',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.black87,
+                            Padding(
+                              padding: const EdgeInsets.all(10.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    ad['title'] ?? 'No Title',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  SizedBox(height: 5),
+                                  Text(
+                                    '₹${ad['rent'] ?? 'N/A'} / month',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.blueAccent,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  SizedBox(height: 5),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.location_on,
+                                          size: 14, color: Colors.grey),
+                                      SizedBox(width: 5),
+                                      Expanded(
+                                        child: Text(
+                                          ad['location'] ?? 'No Location',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[700],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                          Spacer(),
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 8.0),
-                            child: Row(
-                              children: [
-                                Icon(Icons.location_on,
-                                    size: 14, color: Colors.red),
-                                SizedBox(width: 4),
-                                Text(
-                                  ad['location'] ?? 'N/A',
-                                  style: TextStyle(fontSize: 12),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: GestureDetector(
-                          onTap: () => _toggleFavorite(ad),
-                          child: CircleAvatar(
-                            backgroundColor: Colors.white,
-                            child: Icon(
-                              isFavorite
-                                  ? Icons.favorite
-                                  : Icons.favorite_border,
-                              size: 20,
-                              color: Colors.red,
+                          ],
+                        ),
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: GestureDetector(
+                            onTap: () => _toggleFavorite(ad),
+                            child: CircleAvatar(
+                              backgroundColor: Colors.white,
+                              child: Icon(
+                                isFavorite
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                size: 20,
+                                color: Colors.red,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },
