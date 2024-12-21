@@ -24,8 +24,8 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
   String? _selectedBachelor;
   String? _selectedCity;
 
-  // Image data
-  Uint8List? _imageBytes;
+  // List to hold multiple images
+  List<Uint8List?> _imageBytesList = [];
   final picker = ImagePicker();
 
   // Dropdown options
@@ -83,13 +83,19 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
     '33': 'Virudhunagar',
   };
 
-  // Method to pick an image
-  Future<void> _pickImage() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      final bytes = await pickedFile.readAsBytes();
+  // Method to pick images
+  Future<void> _pickImages() async {
+    final pickedFiles = await picker.pickMultiImage();
+    if (pickedFiles != null && pickedFiles.isNotEmpty) {
       setState(() {
-        _imageBytes = bytes;
+        _imageBytesList.clear(); // Clear previous images
+        for (var pickedFile in pickedFiles) {
+          pickedFile.readAsBytes().then((bytes) {
+            setState(() {
+              _imageBytesList.add(bytes);
+            });
+          });
+        }
       });
     }
   }
@@ -103,15 +109,19 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
     final String apiUrl = "http://127.0.0.1:8000/api/data/";
     final request = http.MultipartRequest('POST', Uri.parse(apiUrl));
 
-    if (_imageBytes != null) {
-      request.files.add(http.MultipartFile.fromBytes(
-        'photo',
-        _imageBytes!,
-        filename: 'image.jpg',
-        contentType: MediaType('image', 'jpeg'),
-      ));
+    // Add all the selected images to the request
+    for (int i = 0; i < _imageBytesList.length; i++) {
+      if (_imageBytesList[i] != null) {
+        request.files.add(http.MultipartFile.fromBytes(
+          'photo${i + 1}', // Dynamically naming the file fields (photo1, photo2, etc.)
+          _imageBytesList[i]!,
+          filename: 'image${i + 1}.jpg',
+          contentType: MediaType('image', 'jpeg'),
+        ));
+      }
     }
 
+    // Add other form fields
     request.fields['title'] = _titleController.text;
     request.fields['description'] = _descriptionController.text;
     request.fields['BHK'] = _selectedBHK ?? '0';
@@ -175,7 +185,7 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
       _selectedBHK = null;
       _selectedBachelor = null;
       _selectedCity = null;
-      _imageBytes = null;
+      _imageBytesList.clear();
     });
   }
 
@@ -192,12 +202,23 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
           child: ListView(
             children: [
               GestureDetector(
-                onTap: _pickImage,
-                child: _imageBytes != null
-                    ? Image.memory(
-                        _imageBytes!,
-                        height: 150,
-                        fit: BoxFit.cover,
+                onTap: _pickImages,
+                child: _imageBytesList.isNotEmpty
+                    ? Wrap(
+                        spacing: 8.0,
+                        children: _imageBytesList.map((imageBytes) {
+                          return Container(
+                            height: 150,
+                            width: 150,
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                image: MemoryImage(imageBytes!),
+                                fit: BoxFit.cover,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          );
+                        }).toList(),
                       )
                     : Container(
                         height: 150,
