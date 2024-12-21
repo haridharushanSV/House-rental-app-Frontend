@@ -67,12 +67,70 @@ class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
     super.dispose();
   }
 
+  // Show the favorites list in a bottom sheet
+  void _showFavorites() {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (context) {
+        return _favoriteAdvertisements.isEmpty
+            ? Center(child: Text('No favorites added yet.'))
+            : Container(
+                height: MediaQuery.of(context).size.height * 0.5, // Half the screen
+                child: ListView.builder(
+                  itemCount: _favoriteAdvertisements.length,
+                  itemBuilder: (context, index) {
+                    final ad = _favoriteAdvertisements.elementAt(index);
+                    return Dismissible(
+                      key: Key(ad['id'].toString()), // Use a unique key
+                      onDismissed: (direction) {
+                        setState(() {
+                          _favoriteAdvertisements.remove(ad);
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Removed from favorites')),
+                        );
+                      },
+                      background: Container(
+                        color: Colors.red,
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Icon(Icons.delete, color: Colors.white),
+                        ),
+                      ),
+                      child: ListTile(
+                        title: Text(ad['title'] ?? 'No Title'),
+                        subtitle: Text('₹${ad['rent'] ?? 'N/A'}'),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DetailPage(ad: ad),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final childAspectRatio = screenWidth < 415 ? 0.7 : 0.8;
 
     return Scaffold(
+      // appBar: AppBar(
+      //   title: Text('Advertisements'),
+      //   backgroundColor: Colors.blueAccent,
+      // ),
       body: SafeArea(
         child: Column(
           children: [
@@ -103,6 +161,7 @@ class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
                 itemCount: _filteredAdvertisements.length,
                 itemBuilder: (context, index) {
                   final ad = _filteredAdvertisements[index];
+                  final isFavorite = _favoriteAdvertisements.contains(ad);
                   return GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -124,18 +183,35 @@ class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
                             borderRadius: BorderRadius.vertical(
                               top: Radius.circular(15),
                             ),
-                            child: Image.network(
-                              ad['photo'] ?? '',
-                              height: 120,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
+                            child: Stack(
+                              children: [
+                                Image.network(
+                                  ad['photo1'] ?? '',
                                   height: 120,
-                                  color: Colors.grey[300],
-                                  child: Icon(Icons.broken_image, size: 50),
-                                );
-                              },
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      height: 120,
+                                      color: Colors.grey[300],
+                                      child: Icon(Icons.broken_image, size: 50),
+                                    );
+                                  },
+                                ),
+                                Positioned(
+                                  top: 8,
+                                  right: 8,
+                                  child: GestureDetector(
+                                    onTap: () => _toggleFavorite(ad),
+                                    child: Icon(
+                                      isFavorite
+                                          ? Icons.favorite
+                                          : Icons.favorite_border,
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           Padding(
@@ -193,9 +269,7 @@ class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add action for favorites
-        },
+        onPressed: _showFavorites, // Open favorites list
         backgroundColor: Colors.blueAccent,
         child: Icon(Icons.favorite),
       ),

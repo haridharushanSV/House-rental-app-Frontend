@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:carousel_slider/carousel_slider.dart';  // Import the carousel_slider package
 
 class DetailPage extends StatelessWidget {
   final dynamic ad;
@@ -26,6 +27,20 @@ class DetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get a list of photos
+        List<String> photos = [ad['photo1'] ?? ''];
+    if (ad['photo2'] != null && ad['photo2'] != '') {
+      photos.add(ad['photo2']);
+    }
+    if (ad['photo3'] != null && ad['photo3'] != '') {
+      photos.add(ad['photo3']);
+    }
+    if (ad['photo4'] != null && ad['photo4'] != '') {
+      photos.add(ad['photo4']);
+    }
+    if (ad['photo5'] != null && ad['photo5'] != '') {
+      photos.add(ad['photo5']);
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(ad['title'] ?? 'Details'),
@@ -37,18 +52,33 @@ class DetailPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.network(
-                ad['photo'] ?? '',
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    height: 200,
-                    color: Colors.grey[300],
-                    child: Icon(Icons.broken_image, size: 50),
+              // Carousel Slider to display all photos
+              CarouselSlider(
+                items: photos.map((url) {
+                  return Builder(
+                    builder: (BuildContext context) {
+                      return Image.network(
+                        url,
+                        height: 200,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 200,
+                            color: Colors.grey[300],
+                            child: Icon(Icons.broken_image, size: 50),
+                          );
+                        },
+                      );
+                    },
                   );
-                },
+                }).toList(),
+                options: CarouselOptions(
+                  height: 200,
+                  enlargeCenterPage: true,
+                  enableInfiniteScroll: false,
+                  autoPlay: false,
+                ),
               ),
               SizedBox(height: 16),
               Text(
