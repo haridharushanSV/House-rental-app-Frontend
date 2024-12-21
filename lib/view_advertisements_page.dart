@@ -124,10 +124,10 @@ class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Rental Houses'),
-        backgroundColor: Colors.blueAccent,
-      ),
+      // appBar: AppBar(
+      //   title: Text('Rental Houses'),
+      //   backgroundColor: Colors.blueAccent,
+      // ),
       body: Column(
         children: [
           Padding(
