@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:url_launcher/url_launcher.dart';
-import 'full_view_advertisement.dart'; // Import the detailed view
+import 'full_view_advertisement.dart';
 
 class ViewAdvertisementsPage extends StatefulWidget {
   @override
-  _ViewAdvertisementsPageState createState() =>
-      _ViewAdvertisementsPageState();
+  _ViewAdvertisementsPageState createState() => _ViewAdvertisementsPageState();
 }
 
 class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
@@ -54,62 +52,10 @@ class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
     });
   }
 
-  void _showFavorites(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return _favoriteAdvertisements.isEmpty
-            ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    'No favorites added!',
-                    style: TextStyle(fontSize: 18, color: Colors.black54),
-                  ),
-                ),
-              )
-            : ListView(
-                padding: const EdgeInsets.all(8.0),
-                children: _favoriteAdvertisements.map((ad) {
-                  return ListTile(
-                    leading: Image.network(
-                      ad['photo'] ?? '',
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 50,
-                          height: 50,
-                          color: Colors.grey[300],
-                          child: Icon(Icons.broken_image, size: 30),
-                        );
-                      },
-                    ),
-                    title: Text(ad['title'] ?? 'No Title'),
-                    subtitle: Text(ad['location'] ?? 'No Location'),
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        setState(() {
-                          _favoriteAdvertisements.remove(ad);
-                        });
-                        Navigator.pop(context); // Close and reopen modal
-                        _showFavorites(context);
-                      },
-                    ),
-                  );
-                }).toList(),
-              );
-      },
-    );
-  }
-
   @override
   void initState() {
     super.initState();
     _fetchAdvertisements();
-
     _searchController.addListener(() {
       _filterAdvertisements(_searchController.text);
     });
@@ -123,154 +69,135 @@ class _ViewAdvertisementsPageState extends State<ViewAdvertisementsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final childAspectRatio = screenWidth < 415 ? 0.7 : 0.8;
+
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text('Rental Houses'),
-      //   backgroundColor: Colors.blueAccent,
-      // ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search by location',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search by location',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[200],
                 ),
-                filled: true,
-                fillColor: Colors.grey[200],
               ),
             ),
-          ),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(8.0),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 0.8,
-              ),
-              itemCount: _filteredAdvertisements.length,
-              itemBuilder: (context, index) {
-                final ad = _filteredAdvertisements[index];
-                final isFavorite = _favoriteAdvertisements.contains(ad);
-                return GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => DetailPage(ad: ad),
-                    ),
-                  ),
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    elevation: 4,
-                    child: Stack(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(15),
-                              ),
-                              child: Image.network(
-                                ad['photo'] ?? '',
-                                height: 140,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    height: 140,
-                                    color: Colors.grey[300],
-                                    child: Icon(Icons.broken_image, size: 50),
-                                  );
-                                },
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(10.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    ad['title'] ?? 'No Title',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                  SizedBox(height: 5),
-                                  Text(
-                                    '₹${ad['rent'] ?? 'N/A'} / month',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.blueAccent,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  SizedBox(height: 5),
-                                  Row(
-                                    children: [
-                                      Icon(Icons.location_on,
-                                          size: 14, color: Colors.grey),
-                                      SizedBox(width: 5),
-                                      Expanded(
-                                        child: Text(
-                                          ad['location'] ?? 'No Location',
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey[700],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+            Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.all(8.0),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: childAspectRatio,
+                ),
+                itemCount: _filteredAdvertisements.length,
+                itemBuilder: (context, index) {
+                  final ad = _filteredAdvertisements[index];
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DetailPage(ad: ad),
                         ),
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: GestureDetector(
-                            onTap: () => _toggleFavorite(ad),
-                            child: CircleAvatar(
-                              backgroundColor: Colors.white,
-                              child: Icon(
-                                isFavorite
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                size: 20,
-                                color: Colors.red,
-                              ),
+                      );
+                    },
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      elevation: 4,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(15),
+                            ),
+                            child: Image.network(
+                              ad['photo'] ?? '',
+                              height: 120,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  height: 120,
+                                  color: Colors.grey[300],
+                                  child: Icon(Icons.broken_image, size: 50),
+                                );
+                              },
                             ),
                           ),
-                        ),
-                      ],
+                          Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  ad['title'] ?? 'No Title',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  '₹${ad['rent'] ?? 'N/A'} / month',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.blueAccent,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(Icons.location_on,
+                                        size: 14, color: Colors.grey),
+                                    SizedBox(width: 5),
+                                    Expanded(
+                                      child: Text(
+                                        ad['location'] ?? 'No Location',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showFavorites(context),
+        onPressed: () {
+          // Add action for favorites
+        },
         backgroundColor: Colors.blueAccent,
-        child: Icon(Icons.favorite, color: Colors.white),
+        child: Icon(Icons.favorite),
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'post_advertisement_page.dart';
 import 'view_advertisements_page.dart';
+import 'MyAdvertisementsPage.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -13,6 +14,7 @@ class _HomePageState extends State<HomePage> {
   final List<Widget> _pages = [
     ViewAdvertisementsPage(),
     PostAdvertisementPage(),
+    MyAdvertisementsPage(),
   ];
 
   void _onItemTapped(int index) {
@@ -34,6 +36,10 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.post_add),
             label: 'Post',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle),
+            label: 'My Ads',
           ),
         ],
         currentIndex: _selectedIndex,

@@ -10,20 +10,25 @@ class PostAdvertisementPage extends StatefulWidget {
 }
 
 class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>(); // Form key
+
+  // Controllers for input fields
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
   final TextEditingController _rentController = TextEditingController();
   final TextEditingController _contactController = TextEditingController();
 
+  // Dropdown selections
   String? _selectedBHK;
   String? _selectedBachelor;
   String? _selectedCity;
 
+  // Image data
   Uint8List? _imageBytes;
-
   final picker = ImagePicker();
 
+  // Dropdown options
   final Map<String, String> bhkChoices = {
     '0': ' ',
     '1': '1BHK',
@@ -78,6 +83,7 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
     '33': 'Virudhunagar',
   };
 
+  // Method to pick an image
   Future<void> _pickImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -88,9 +94,13 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
     }
   }
 
+  // Method to post advertisement
   Future<void> _postAdvertisement() async {
-    final String apiUrl = "http://127.0.0.1:8000/api/data/";
+    if (!_formKey.currentState!.validate()) {
+      return; // If validation fails, do not proceed
+    }
 
+    final String apiUrl = "http://127.0.0.1:8000/api/data/";
     final request = http.MultipartRequest('POST', Uri.parse(apiUrl));
 
     if (_imageBytes != null) {
@@ -104,10 +114,10 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
 
     request.fields['title'] = _titleController.text;
     request.fields['description'] = _descriptionController.text;
-    request.fields['BHK'] = _selectedBHK ?? '0'; // Sending mapped value
-    request.fields['bachelor'] = _selectedBachelor ?? '0'; // Sending mapped value
+    request.fields['BHK'] = _selectedBHK ?? '0';
+    request.fields['bachelor'] = _selectedBachelor ?? '0';
     request.fields['location'] = _locationController.text;
-    request.fields['city'] = _selectedCity ?? '0'; // Sending mapped value
+    request.fields['city'] = _selectedCity ?? '0';
     request.fields['rent'] = _rentController.text.isNotEmpty
         ? int.parse(_rentController.text).toString()
         : '';
@@ -123,17 +133,38 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
         );
         _clearFields();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: ${response.statusCode}\n$responseBody')),
+        _showErrorDialog(
+          'Failed to post advertisement',
+          'Please Enter All Details',
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      _showErrorDialog('Error', e.toString());
     }
   }
 
+  // Helper method to show error dialog
+  void _showErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Method to clear input fields
   void _clearFields() {
     _titleController.clear();
     _descriptionController.clear();
@@ -156,92 +187,114 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            GestureDetector(
-              onTap: _pickImage,
-              child: _imageBytes != null
-                  ? Image.memory(
-                      _imageBytes!,
-                      height: 150,
-                      fit: BoxFit.cover,
-                    )
-                  : Container(
-                      height: 150,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(8),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              GestureDetector(
+                onTap: _pickImage,
+                child: _imageBytes != null
+                    ? Image.memory(
+                        _imageBytes!,
+                        height: 150,
+                        fit: BoxFit.cover,
+                      )
+                    : Container(
+                        height: 150,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.add, size: 50, color: Colors.grey[600]),
                       ),
-                      child: Icon(Icons.add, size: 50, color: Colors.grey[600]),
-                    ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              controller: _titleController,
-              decoration: InputDecoration(labelText: 'Title'),
-            ),
-            TextField(
-              controller: _descriptionController,
-              decoration: InputDecoration(labelText: 'Description'),
-            ),
-            DropdownButtonFormField<String>(
-              value: _selectedBHK,
-              decoration: InputDecoration(labelText: 'BHK'),
-              items: bhkChoices.entries
-                  .map((entry) =>
-                      DropdownMenuItem(value: entry.key, child: Text(entry.value)))
-                  .toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedBHK = value;
-                });
-              },
-            ),
-            DropdownButtonFormField<String>(
-              value: _selectedBachelor,
-              decoration: InputDecoration(labelText: 'Bachelor Allowed'),
-              items: bachelorChoices.entries
-                  .map((entry) =>
-                      DropdownMenuItem(value: entry.key, child: Text(entry.value)))
-                  .toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedBachelor = value;
-                });
-              },
-            ),
-            TextField(
-              controller: _locationController,
-              decoration: InputDecoration(labelText: 'Location'),
-            ),
-            DropdownButtonFormField<String>(
-              value: _selectedCity,
-              decoration: InputDecoration(labelText: 'City'),
-              items: cityChoices.entries
-                  .map((entry) =>
-                      DropdownMenuItem(value: entry.key, child: Text(entry.value)))
-                  .toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedCity = value;
-                });
-              },
-            ),
-            TextField(
-              controller: _rentController,
-              decoration: InputDecoration(labelText: 'Rent'),
-              keyboardType: TextInputType.number,
-            ),
-            TextField(
-              controller: _contactController,
-              decoration: InputDecoration(labelText: 'Contact'),
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _postAdvertisement,
-              child: Text('Post Advertisement'),
-            ),
-          ],
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: _titleController,
+                decoration: InputDecoration(labelText: 'Title'),
+              ),
+              TextField(
+                controller: _descriptionController,
+                decoration: InputDecoration(labelText: 'Description'),
+                maxLines: 4,
+                keyboardType: TextInputType.multiline,
+              ),
+              DropdownButtonFormField<String>(
+                value: _selectedBHK,
+                decoration: InputDecoration(labelText: 'BHK'),
+                items: bhkChoices.entries
+                    .map((entry) => DropdownMenuItem(
+                          value: entry.key,
+                          child: Text(entry.value),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedBHK = value;
+                  });
+                },
+              ),
+              DropdownButtonFormField<String>(
+                value: _selectedBachelor,
+                decoration: InputDecoration(labelText: 'Bachelor Allowed'),
+                items: bachelorChoices.entries
+                    .map((entry) => DropdownMenuItem(
+                          value: entry.key,
+                          child: Text(entry.value),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedBachelor = value;
+                  });
+                },
+              ),
+              TextField(
+                controller: _locationController,
+                decoration: InputDecoration(labelText: 'Location'),
+              ),
+              DropdownButtonFormField<String>(
+                value: _selectedCity,
+                decoration: InputDecoration(labelText: 'City'),
+                items: cityChoices.entries
+                    .map((entry) => DropdownMenuItem(
+                          value: entry.key,
+                          child: Text(entry.value),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCity = value;
+                  });
+                },
+              ),
+              TextField(
+                controller: _rentController,
+                decoration: InputDecoration(labelText: 'Rent'),
+                keyboardType: TextInputType.number,
+              ),
+              TextFormField(
+                controller: _contactController,
+                decoration: InputDecoration(labelText: 'Contact'),
+                keyboardType: TextInputType.phone,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Contact number is required';
+                  }
+                  final regex = RegExp(r'^\d{10}$');
+                  if (!regex.hasMatch(value)) {
+                    return 'Enter a valid 10-digit mobile number';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _postAdvertisement,
+                child: Text('Post Advertisement'),
+              ),
+            ],
+          ),
         ),
       ),
     );
