@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "417364676999",
+    "project_id": "rentalhouse-da608",
+    "storage_bucket": "rentalhouse-da608.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:417364676999:android:a44c3154a01f3e252ac322",
+        "android_client_info": {
+          "package_name": "com.example.house_rental"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "417364676999-3sv78ip7dk0gadkampetvveac782gs0u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlgV4ZsYhw7CjllPebU9iA2K1O00vJyXY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "417364676999-3sv78ip7dk0gadkampetvveac782gs0u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "417364676999-6fhmvl6l5qno6r0l7qhufo0augq0hp1e.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "havs.rentalhouse"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

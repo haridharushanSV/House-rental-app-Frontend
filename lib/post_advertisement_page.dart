@@ -114,7 +114,7 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
       if (_imageBytesList[i] != null) {
         request.files.add(http.MultipartFile.fromBytes(
           'photo${i + 1}', // Dynamically naming the file fields (photo1, photo2, etc.)
-          _imageBytesList[i]!,
+          _imageBytesList[i]! ,
           filename: 'image${i + 1}.jpg',
           contentType: MediaType('image', 'jpeg'),
         ));
@@ -138,19 +138,38 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
       final responseBody = await response.stream.bytesToString();
 
       if (response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Advertisement posted successfully!')),
-        );
+        // Display success message in AlertDialog
+        _showSuccessDialog('Advertisement posted successfully!');
         _clearFields();
       } else {
-        _showErrorDialog(
-          'Failed to post advertisement',
-          'Please Enter All Details',
-        );
+        // Display error message in AlertDialog
+        _showErrorDialog('Failed to post advertisement', 'Please Enter All Details');
       }
     } catch (e) {
+      // Display error message in AlertDialog
       _showErrorDialog('Error', e.toString());
     }
+  }
+
+  // Helper method to show success dialog
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Success'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // Helper method to show error dialog
@@ -166,7 +185,7 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );
@@ -193,7 +212,7 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Post Advertisement'),
+        title: const Text('Post Advertisement'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -226,23 +245,23 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
                           color: Colors.grey[300],
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Icon(Icons.add, size: 50, color: Colors.grey[600]),
+                        child: const Icon(Icons.add, size: 50, color: Colors.grey),
                       ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextField(
                 controller: _titleController,
-                decoration: InputDecoration(labelText: 'Title'),
+                decoration: const InputDecoration(labelText: 'Title'),
               ),
               TextField(
                 controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Description'),
+                decoration: const InputDecoration(labelText: 'Description'),
                 maxLines: 4,
                 keyboardType: TextInputType.multiline,
               ),
               DropdownButtonFormField<String>(
                 value: _selectedBHK,
-                decoration: InputDecoration(labelText: 'BHK'),
+                decoration: const InputDecoration(labelText: 'BHK'),
                 items: bhkChoices.entries
                     .map((entry) => DropdownMenuItem(
                           value: entry.key,
@@ -257,7 +276,7 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
               ),
               DropdownButtonFormField<String>(
                 value: _selectedBachelor,
-                decoration: InputDecoration(labelText: 'Bachelor Allowed'),
+                decoration: const InputDecoration(labelText: 'Bachelor Allowed'),
                 items: bachelorChoices.entries
                     .map((entry) => DropdownMenuItem(
                           value: entry.key,
@@ -272,11 +291,11 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
               ),
               TextField(
                 controller: _locationController,
-                decoration: InputDecoration(labelText: 'Location'),
+                decoration: const InputDecoration(labelText: 'Location'),
               ),
               DropdownButtonFormField<String>(
                 value: _selectedCity,
-                decoration: InputDecoration(labelText: 'City'),
+                decoration: const InputDecoration(labelText: 'City'),
                 items: cityChoices.entries
                     .map((entry) => DropdownMenuItem(
                           value: entry.key,
@@ -291,12 +310,12 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
               ),
               TextField(
                 controller: _rentController,
-                decoration: InputDecoration(labelText: 'Rent'),
+                decoration: const InputDecoration(labelText: 'Rent'),
                 keyboardType: TextInputType.number,
               ),
               TextFormField(
                 controller: _contactController,
-                decoration: InputDecoration(labelText: 'Contact'),
+                decoration: const InputDecoration(labelText: 'Contact'),
                 keyboardType: TextInputType.phone,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -309,10 +328,10 @@ class _PostAdvertisementPageState extends State<PostAdvertisementPage> {
                   return null;
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _postAdvertisement,
-                child: Text('Post Advertisement'),
+                child: const Text('Post Advertisement'),
               ),
             ],
           ),
