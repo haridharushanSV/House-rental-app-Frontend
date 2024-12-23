@@ -138,10 +138,10 @@ void _showErrorDialog(String message) {
             icon: Icon(Icons.post_add),
             label: 'Post',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
-            label: 'My Ads',
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.account_circle),
+          //   label: 'My Ads',
+          // ),
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
